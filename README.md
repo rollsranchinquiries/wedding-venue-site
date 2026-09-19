@@ -73,6 +73,11 @@ per-field validation errors from Formspree:
 
 No server code is needed for this — see `components/InquiryForm.tsx`.
 
+## Under-construction password
+
+`proxy.ts` puts HTTP Basic Auth (`SITE_USER` / `SITE_PASSWORD`) in front of the
+whole site. To launch publicly, delete `proxy.ts` and those env vars.
+
 ## Photo gallery
 
 `components/Gallery.tsx` currently points at placeholder SVGs in
