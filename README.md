@@ -62,11 +62,12 @@ fields, so titles and descriptions are never fetched. Events marked "free"
 ## Configuring the inquiry form
 
 The inquiry form posts directly from the browser to
-[Formspree](https://formspree.io):
+[Formspree](https://formspree.io) using `@formspree/react`, which also shows
+per-field validation errors from Formspree:
 
 1. Create a free Formspree account and a new form.
-2. Set `NEXT_PUBLIC_FORMSPREE_ENDPOINT` to the form's endpoint, e.g.
-   `https://formspree.io/f/abcdwxyz`.
+2. Set `NEXT_PUBLIC_FORMSPREE_FORM_ID` to the ID at the end of the form's
+   endpoint (`https://formspree.io/f/abcdwxyz` → `abcdwxyz`).
 3. In Formspree's dashboard, set the notification email to the venue
    owner's inbox.
 

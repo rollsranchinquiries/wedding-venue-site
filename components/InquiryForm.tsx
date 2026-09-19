@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useForm, ValidationError } from "@formspree/react";
 import { useInquiryDates } from "./InquiryDatesContext";
 
-type SubmitState = "idle" | "submitting" | "success" | "error";
-
-const FORMSPREE_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
+const FORMSPREE_FORM_ID = process.env.NEXT_PUBLIC_FORMSPREE_FORM_ID;
 
 export default function InquiryForm() {
-  const [state, setState] = useState<SubmitState>("idle");
+  const [state, submitToFormspree] = useForm(FORMSPREE_FORM_ID ?? "not-configured");
   const { dates } = useInquiryDates();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -21,39 +20,22 @@ export default function InquiryForm() {
     setEndDate(dates.end);
   }, [dates]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!FORMSPREE_ENDPOINT) {
-      setState("error");
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (!FORMSPREE_FORM_ID) {
+      event.preventDefault();
       return;
     }
-
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    setState("submitting");
-
-    try {
-      const res = await fetch(FORMSPREE_ENDPOINT, {
-        method: "POST",
-        body: formData,
-        headers: { Accept: "application/json" },
-      });
-
-      if (res.ok) {
-        setState("success");
-        form.reset();
-        setStartDate("");
-        setEndDate("");
-      } else {
-        setState("error");
-      }
-    } catch {
-      setState("error");
-    }
+    return submitToFormspree(event);
   }
 
-  if (state === "success") {
+  useEffect(() => {
+    if (state.succeeded) {
+      setStartDate("");
+      setEndDate("");
+    }
+  }, [state.succeeded]);
+
+  if (state.succeeded) {
     return (
       <section id="inquiry" className="px-6 py-20 sm:px-10">
         <div className="mx-auto max-w-xl rounded-2xl border border-sage/30 bg-sage/10 p-10 text-center">
@@ -87,6 +69,7 @@ export default function InquiryForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <input type="hidden" name="_subject" value="New Rolls Ranch inquiry" />
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="name" className="mb-1 block text-sm font-medium text-walnut">
@@ -100,6 +83,7 @@ export default function InquiryForm() {
                 autoComplete="name"
                 className="w-full rounded-lg border border-walnut/20 bg-white/70 px-4 py-2.5 text-walnut placeholder:text-walnut-light/50 focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
               />
+                <ValidationError field="name" errors={state.errors} className="mt-1 block text-sm text-terracotta" />
             </div>
             <div>
               <label htmlFor="phone" className="mb-1 block text-sm font-medium text-walnut">
@@ -112,6 +96,7 @@ export default function InquiryForm() {
                 autoComplete="tel"
                 className="w-full rounded-lg border border-walnut/20 bg-white/70 px-4 py-2.5 text-walnut placeholder:text-walnut-light/50 focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
               />
+                <ValidationError field="phone" errors={state.errors} className="mt-1 block text-sm text-terracotta" />
             </div>
           </div>
 
@@ -127,6 +112,7 @@ export default function InquiryForm() {
               autoComplete="email"
               className="w-full rounded-lg border border-walnut/20 bg-white/70 px-4 py-2.5 text-walnut placeholder:text-walnut-light/50 focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
             />
+              <ValidationError field="email" errors={state.errors} className="mt-1 block text-sm text-terracotta" />
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
@@ -143,6 +129,7 @@ export default function InquiryForm() {
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full rounded-lg border border-walnut/20 bg-white/70 px-4 py-2.5 text-walnut focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
               />
+                <ValidationError field="startDate" errors={state.errors} className="mt-1 block text-sm text-terracotta" />
             </div>
             <div>
               <label htmlFor="endDate" className="mb-1 block text-sm font-medium text-walnut">
@@ -157,6 +144,7 @@ export default function InquiryForm() {
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-full rounded-lg border border-walnut/20 bg-white/70 px-4 py-2.5 text-walnut focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
               />
+                <ValidationError field="endDate" errors={state.errors} className="mt-1 block text-sm text-terracotta" />
             </div>
           </div>
 
@@ -171,6 +159,7 @@ export default function InquiryForm() {
               min={1}
               className="w-full rounded-lg border border-walnut/20 bg-white/70 px-4 py-2.5 text-walnut placeholder:text-walnut-light/50 focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
             />
+              <ValidationError field="guestCount" errors={state.errors} className="mt-1 block text-sm text-terracotta" />
           </div>
 
           <div>
@@ -184,22 +173,23 @@ export default function InquiryForm() {
               placeholder="Tell us a bit about your event..."
               className="w-full rounded-lg border border-walnut/20 bg-white/70 px-4 py-2.5 text-walnut placeholder:text-walnut-light/50 focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
             />
+            <ValidationError field="message" errors={state.errors} className="mt-1 block text-sm text-terracotta" />
           </div>
 
-          {state === "error" && (
+          {(!FORMSPREE_FORM_ID || state.errors) && (
             <p className="rounded-lg bg-terracotta/10 px-4 py-3 text-sm text-terracotta">
-              {FORMSPREE_ENDPOINT
+              {FORMSPREE_FORM_ID
                 ? "Something went wrong sending your inquiry. Please try again, or email us directly."
-                : "The inquiry form isn't configured yet — set NEXT_PUBLIC_FORMSPREE_ENDPOINT."}
+                : "The inquiry form isn't configured yet — set NEXT_PUBLIC_FORMSPREE_FORM_ID."}
             </p>
           )}
 
           <button
             type="submit"
-            disabled={state === "submitting"}
+            disabled={state.submitting}
             className="w-full rounded-full bg-terracotta px-8 py-3 font-medium text-cream transition hover:bg-terracotta-light disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {state === "submitting" ? "Sending..." : "Send Inquiry"}
+            {state.submitting ? "Sending..." : "Send Inquiry"}
           </button>
         </form>
       </div>
