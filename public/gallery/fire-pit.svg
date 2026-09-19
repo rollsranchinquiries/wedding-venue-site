@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2000" viewBox="0 0 1600 2000">
+  <rect width="1600" height="2000" fill="#bfa87f"/>
+  <g fill="none" stroke="#3d3220" stroke-width="3" opacity="0.35">
+    <line x1="0" y1="0" x2="1600" y2="2000"/>
+    <line x1="1600" y1="0" x2="0" y2="2000"/>
+  </g>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-size="73"
+        fill="#3d3220" letter-spacing="2">Fire Pit Gathering</text>
+  <text x="50%" y="1927" text-anchor="middle" dominant-baseline="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-size="38"
+        fill="#3d3220" opacity="0.7">Placeholder — replace with real photo</text>
+</svg>
